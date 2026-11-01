@@ -294,7 +294,7 @@ function drawThumbs(){
 function layoutSheet(){
   var m=F.mode,isRecipe=m==='recipe-new'||m==='recipe-edit',hasCook=m==='cook-new'||m==='cook-edit'||(m==='recipe-new'&&F.status==='cooked');
   $('#status-row').hidden=m!=='recipe-new';
-  $('#recipe-fields').hidden=!isRecipe;
+  $('#recipe-fields').hidden=!(isRecipe||m==='cook-edit');
   $('#cook-fields').hidden=!hasCook;
   $('#f-delete').hidden=!(m==='recipe-edit'||m==='cook-edit');
   $('#f-delete').textContent=m==='recipe-edit'?'Delete recipe':'Delete cook';
@@ -315,9 +315,9 @@ function openSheet(mode,ids){
   $('#f-date').value=c&&c.cooked_on||today();
   $('#f-notes').value=c?c.notes||'':'';
   if(c){F.photos=(c.photos||[]).map(function(p){return {path:p}});F.rating=((S.ratings.get(c.id)||{})[S.me])||0;F.origRating=F.rating}
-  var titles={'recipe-new':'Add a recipe','recipe-edit':'Edit recipe','cook-new':'Log a cook','cook-edit':'Edit this cook'};
+  var titles={'recipe-new':'Add a recipe','recipe-edit':'Edit recipe','cook-new':'Log a cook','cook-edit':'Edit cook'};
   $('#sheet-title').textContent=titles[mode];
-  var sub=$('#sheet-sub');sub.hidden=!(mode.indexOf('cook')===0&&r);sub.textContent=r?r.title:'';
+  var sub=$('#sheet-sub');sub.hidden=!(mode==='cook-new'&&r);sub.textContent=r?r.title:'';
   fillSource();drawStarsForm();drawThumbs();layoutSheet();
   $('#sheet').hidden=false;syncLock();
   (mode.indexOf('recipe')===0?$('#f-title'):$('#f-date')).focus();
@@ -332,7 +332,7 @@ async function saveForm(e){
   var mode=F.mode,isRecipe=mode.indexOf('recipe')===0;
   var hasCook=mode==='cook-new'||mode==='cook-edit'||(mode==='recipe-new'&&F.status==='cooked');
   var title=$('#f-title').value.trim(),date=$('#f-date').value;
-  if(isRecipe&&!title){formErr('Give the recipe a name.');$('#f-title').focus();return}
+  if((isRecipe||mode==='cook-edit')&&!title){formErr('Give the recipe a name.');$('#f-title').focus();return}
   if(hasCook&&!date){formErr('Pick the date you cooked it.');$('#f-date').focus();return}
   F.busy=true;setBusy(true);formErr('');
   var uploaded=[];
@@ -364,6 +364,7 @@ async function saveForm(e){
     } else if(mode==='cook-new'){
       await insertCook(F.rid,date,notes,paths,F.rating);
     } else if(mode==='cook-edit'){
+      must(await S.sb.from('recipes').update(rdata).eq('id',F.rid));
       must(await S.sb.from('cooks').update({cooked_on:date,notes:notes,photos:paths}).eq('id',F.cid));
       if(F.rating!==F.origRating){
         if(F.rating>0)must(await S.sb.from('ratings').upsert({cook_id:F.cid,user_id:S.me,stars:F.rating},{onConflict:'cook_id,user_id'}));
