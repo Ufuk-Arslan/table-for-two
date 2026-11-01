@@ -40,7 +40,9 @@ function errMsg(e){
   if(m.indexOf('decode')>=0||m.indexOf('format')>=0) return "That photo format isn't supported. Try a JPEG or PNG.";
   if(m.indexOf('jwt')>=0||m.indexOf('expired')>=0) return 'Your sign-in has expired. Reload the page and sign in again.';
   if(m.indexOf('fetch')>=0||m.indexOf('network')>=0||m.indexOf('failed')>=0) return "Couldn't reach the book. Check your connection and try again.";
-  return "Couldn't save that. Try again in a moment.";
+  var detail=[e&&(e.code||e.statusCode),e&&e.message?e.message:(typeof e==='string'?e:'')].filter(Boolean).join(': ').slice(0,220);
+  try{console.error('Table for Two error:',e)}catch(x){}
+  return "Couldn't save that. Try again in a moment."+(detail?' ('+detail+')':'');
 }
 var toastTimer=null;
 function toast(msg){var t=$('#toast');t.textContent=msg;t.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(function(){t.hidden=true},3200)}
