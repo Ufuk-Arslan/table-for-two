@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Table for Two</title>
+<meta name="description" content="A shared recipe book for two.">
+<meta name="theme-color" content="#2340C4">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Table for Two">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="robots" content="noindex,nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gloock&family=Hanken+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<noscript><p style="padding:24px">Table for Two needs JavaScript turned on.</p></noscript>
+
+<!-- Shown until config.js has been filled in -->
+<main class="wrap narrow" id="screen-setup" hidden>
+  <h1>Table for Two</h1>
+  <div class="empty">
+    <p class="empty-title">Almost there.</p>
+    <p>This site isn't connected to its database yet. Open <strong>config.js</strong>, paste in your Supabase project URL and publishable key, and save. The setup guide shows where to find both.</p>
+  </div>
+</main>
+
+<!-- Sign in -->
+<main class="wrap narrow" id="screen-auth" hidden>
+  <h1>Table for Two</h1>
+  <p class="stats">A cookbook for the two of you</p>
+  <form class="card-form" id="auth-form" novalidate>
+    <label for="a-email">Email</label>
+    <input id="a-email" type="email" autocomplete="username" autocapitalize="none" inputmode="email">
+    <label for="a-pass">Password</label>
+    <input id="a-pass" type="password" autocomplete="current-password">
+    <p class="err" id="auth-err" role="alert" hidden></p>
+    <button type="submit" class="primary wide" id="auth-btn">Sign in</button>
+  </form>
+  <p class="muted small">This book is private. Only the two accounts set up for it can open it.</p>
+</main>
+
+<!-- The book -->
+<div class="wrap" id="screen-app" hidden>
+  <header class="top">
+    <div>
+      <h1>Table for Two</h1>
+      <p class="stats" id="stats">A cookbook for the two of you</p>
+    </div>
+    <button type="button" class="primary" id="btn-add" data-action="add">Add recipe</button>
+  </header>
+  <p class="who small muted"><span id="who">Signed in</span> · <button type="button" class="link inline" data-action="account">Account</button></p>
+  <p class="notice" id="not-member" hidden>You're signed in, but this account isn't one of the two the book was set up for, so it can't see or change anything. Sign out and use the other account.</p>
+
+  <div id="listView">
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" data-action="tab" data-v="cooked" aria-selected="true">Cooked<span class="count" id="n-cooked">0</span></button>
+      <button type="button" role="tab" data-action="tab" data-v="try" aria-selected="false">To try<span class="count" id="n-try">0</span></button>
+    </div>
+    <div class="toolbar">
+      <label class="sr" for="q">Search recipes</label>
+      <input id="q" type="search" placeholder="Search recipes" autocomplete="off">
+      <label class="sr" for="sort">Sort recipes</label>
+      <select id="sort">
+        <option value="recent">Latest first</option>
+        <option value="top">Top rated</option>
+        <option value="az">A to Z</option>
+        <option value="added">Recently added</option>
+      </select>
+    </div>
+    <div class="chips" id="chips" role="group" aria-label="Filter by course"></div>
+    <div id="results"></div>
+  </div>
+
+  <section id="detailView" hidden></section>
+</div>
+
+<!-- Add / edit sheet -->
+<div class="overlay" id="sheet" hidden>
+  <form class="panel" id="form" novalidate aria-labelledby="sheet-title">
+    <div class="panel-head">
+      <div>
+        <h2 id="sheet-title">Add a recipe</h2>
+        <p id="sheet-sub" hidden></p>
+      </div>
+      <button type="button" class="link" data-action="close-sheet">Close</button>
+    </div>
+
+    <div class="seg" id="status-row" role="group" aria-label="Have you cooked it yet?">
+      <button type="button" data-action="status" data-v="cooked" aria-pressed="true">We cooked it</button>
+      <button type="button" data-action="status" data-v="try" aria-pressed="false">Want to try</button>
+    </div>
+
+    <div id="recipe-fields">
+      <label for="f-title">Recipe name</label>
+      <input id="f-title" type="text" autocomplete="off" placeholder="Burnt miso aubergine">
+      <div class="two">
+        <div>
+          <label for="f-cat">Course</label>
+          <select id="f-cat"></select>
+        </div>
+        <div>
+          <label for="f-stype">Found in</label>
+          <select id="f-stype"></select>
+        </div>
+      </div>
+      <label for="f-source">Where exactly</label>
+      <input id="f-source" type="text" autocomplete="off">
+      <label for="f-tweaks">Next time</label>
+      <textarea id="f-tweaks" rows="2" placeholder="Less salt, double the garlic, rest the dough longer"></textarea>
+    </div>
+
+    <div id="cook-fields">
+      <label for="f-date">Date cooked</label>
+      <input id="f-date" type="date">
+      <span class="field-label">Your rating</span>
+      <div id="f-stars"></div>
+      <label for="f-notes">Notes</label>
+      <textarea id="f-notes" rows="3" placeholder="How did it go? What did you change?"></textarea>
+      <span class="field-label">Photos</span>
+      <div class="thumbs" id="f-thumbs"></div>
+      <button type="button" class="ghost" data-action="pick-photos">Add photos</button>
+      <input id="f-photos" type="file" accept="image/*" multiple hidden>
+    </div>
+
+    <p class="err" id="form-err" role="alert" hidden></p>
+    <div class="panel-foot">
+      <button type="button" class="danger" id="f-delete" data-action="delete" hidden>Delete</button>
+      <span class="spacer"></span>
+      <button type="submit" class="primary" id="f-save">Save</button>
+    </div>
+  </form>
+</div>
+
+<!-- Account sheet -->
+<div class="overlay" id="account" hidden>
+  <form class="panel" id="account-form" novalidate aria-labelledby="account-title">
+    <div class="panel-head">
+      <div>
+        <h2 id="account-title">Account</h2>
+        <p id="account-email"></p>
+      </div>
+      <button type="button" class="link" data-action="close-account">Close</button>
+    </div>
+    <label for="acc-name">Your name in the book</label>
+    <input id="acc-name" type="text" autocomplete="off" maxlength="40">
+    <p class="err" id="account-err" role="alert" hidden></p>
+    <div class="panel-foot">
+      <button type="button" class="ghost" data-action="signout">Sign out</button>
+      <span class="spacer"></span>
+      <button type="submit" class="primary">Save name</button>
+    </div>
+  </form>
+</div>
+
+<div class="lb" id="lb" hidden role="dialog" aria-label="Photo">
+  <img id="lb-img" alt="">
+  <div class="lb-bar">
+    <button type="button" id="lb-prev" data-action="lb-prev" aria-label="Previous photo">Prev</button>
+    <span id="lb-count"></span>
+    <button type="button" id="lb-next" data-action="lb-next" aria-label="Next photo">Next</button>
+    <button type="button" id="lb-close" data-action="lb-close">Close</button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="supabase.js"></script>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
